@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+    environment {
+        AWS_ACCOUNT_ID = 'your-aws-account-id'
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = 'your-ecr-repository'
+        ECS_CLUSTER = 'my-app-cluster'
+        ECS_SERVICE = 'my-app-service'
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'git@bitbucket.org:yourrepo.git'
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                docker build -t php-app:latest ./app
+                docker build -t tomcat-app:latest ./tomcat
+                '''
+            }
+        }
+        stage('Push to ECR') {
+            steps {
+                sh '''
+                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                
+                docker tag php-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:php-latest
+                docker tag tomcat-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:tomcat-latest
+                
+                docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:php-latest
+                docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:tomcat-latest
+                '''
+            }
+        }
+        stage('Deploy to AWS ECS') {
+            steps {
+                sh '''
+                ansible-playbook -i ansible/inventory.ini ansible/ecs-deploy.yml
+                '''
+            }
+        }
+    }
+}

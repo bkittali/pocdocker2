@@ -1,0 +1,20 @@
+- name: Deploy updated application to ECS
+  hosts: localhost
+  tasks:
+    - name: Update ECS Task Definition
+      community.aws.ecs_taskdefinition:
+        family: "my-app"
+        container_definitions:
+          - name: "php"
+            image: "{{ ecr_url }}/php-latest"
+            memory: 512
+            cpu: 256
+            essential: true
+          - name: "tomcat"
+            image: "{{ ecr_url }}/tomcat-latest"
+            memory: 1024
+            cpu: 512
+            essential: true
+
+    - name: Restart ECS Service
+      command: aws ecs update-service --cluster my-app-cluster --service my-app-service --force-new-deployment
