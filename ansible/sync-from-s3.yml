@@ -1,0 +1,18 @@
+- name: Sync latest code from S3 to ECS containers
+  hosts: ecs_instances
+  tasks:
+    - name: Install AWS CLI inside containers (if not present)
+      command: apt update && apt install -y awscli
+      ignore_errors: yes
+
+    - name: Download latest PHP files from S3
+      command: aws s3 sync s3://my-app-source-code/php /var/www/html/
+    
+    - name: Download latest WAR file from S3
+      command: aws s3 cp s3://my-app-source-code/tomcat/myapp.war /usr/local/tomcat/webapps/myapp.war
+
+    - name: Restart PHP-FPM
+      command: systemctl restart php8.1-fpm
+
+    - name: Restart Tomcat
+      command: systemctl restart tomcat

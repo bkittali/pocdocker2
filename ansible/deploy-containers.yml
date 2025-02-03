@@ -1,0 +1,27 @@
+- name: Deploy Application Containers on EC2
+  hosts: app_server
+  become: true
+  tasks:
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull latest images from AWS ECR
+      shell: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+        docker pull <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/php-latest
+        docker pull <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/nginx-latest
+        docker pull <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/mysql-latest
+        docker pull <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/tomcat-latest
+
+    - name: Start Containers using Docker Compose
+      command: docker-compose up -d
+      args:
+        chdir: /home/ec2-user/project-root/

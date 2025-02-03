@@ -1,0 +1,23 @@
+- name: Perform Blue-Green Deployment
+  hosts: app_server
+  become: true
+  tasks:
+    - name: Check running containers
+      shell: docker ps --format '{{.Names}}' | grep app-blue || echo green
+      register: current_version
+
+    - name: Set new version
+      set_fact:
+        new_version: "{{ 'blue' if current_version.stdout == 'green' else 'green' }}"
+
+    - name: Start new deployment
+      command: docker-compose -f docker-compose.{{ new_version }}.yml up -d
+
+    - name: Verify new deployment
+      command: curl --fail http://localhost || exit 1
+
+    - name: Switch ALB target group
+      command: aws elbv2 modify-target-group --target-group-arn <ALB_TARGET_GROUP_ARN> --targets Id=<APP_SERVER_IP>
+
+    - name: Stop old deployment
+      command: docker-compose -f docker-compose.{{ current_version.stdout }}.yml down
