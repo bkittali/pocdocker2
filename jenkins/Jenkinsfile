@@ -1,14 +1,14 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID = 'your-aws-account-id'
+        AWS_ACCOUNT_ID = '740675012653'
         AWS_REGION = 'us-east-1'
-        ECR_REPO = 'your-ecr-repository'
+        ECR_REPO = 'gcg-docker-test-setup'
     }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'git@bitbucket.org:yourrepo.git'
+                git branch: 'main', url: 'git@bitbucket.org:devops.git'
             }
         }
         stage('Build and Push Images') {
@@ -21,8 +21,8 @@ pipeline {
 
                 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
                 
-                docker tag php-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:php-latest
-                docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:php-latest
+                docker tag php-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+                docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
                 '''
             }
         }

@@ -1,7 +1,7 @@
 resource "aws_instance" "jenkins_server" {
-  ami           = "ami-12345678"  # Replace with valid AMI ID
+  ami           = "ami-001eed247d2135475"  # Replace with valid AMI ID
   instance_type = "t3.medium"
-  key_name      = "your-key"  # Replace with your SSH key name
+  key_name      = "won_ls_key.pem"  # Replace with your SSH key name
   security_groups = [aws_security_group.ecs_sg.id]
 
   user_data = <<-EOF
@@ -19,9 +19,9 @@ resource "aws_instance" "jenkins_server" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-12345678"  # Replace with valid AMI ID
+  ami           = "ami-001eed247d2135475"  # Replace with valid AMI ID
   instance_type = "t3.medium"
-  key_name      = "your-key"  # Replace with your SSH key name
+  key_name      = "won_ls_key.pem"  # Replace with your SSH key name
   security_groups = [aws_security_group.ecs_sg.id]
 
   tags = {

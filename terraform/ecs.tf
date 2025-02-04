@@ -7,14 +7,14 @@ resource "aws_ecs_task_definition" "my_task" {
   container_definitions = jsonencode([
     {
       name  = "php"
-      image = "1234567890.dkr.ecr.us-east-1.amazonaws.com/php-latest"
+      image = "740675012653.dkr.ecr.us-east-1.amazonaws.com/test_php_repo"
       memory = 512
       cpu = 256
       essential = true
     },
     {
       name  = "nginx"
-      image = "1234567890.dkr.ecr.us-east-1.amazonaws.com/nginx-latest"
+      image = "740675012653.dkr.ecr.us-east-1.amazonaws.com/test_nginx_repo"
       memory = 512
       cpu = 256
       essential = true
