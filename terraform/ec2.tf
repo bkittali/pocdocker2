@@ -1,7 +1,7 @@
 resource "aws_instance" "jenkins_server" {
   ami           = "ami-001eed247d2135475"  # Replace with valid AMI ID
   instance_type = "t3.medium"
-  key_name      = "won_ls_key.pem"  # Replace with your SSH key name
+  key_name      = "won_ls_key"  # Replace with your SSH key name
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
   subnet_id = aws_subnet.public_subnet_1.id  # Explicitly specify a VPC subnet
 
@@ -16,17 +16,5 @@ resource "aws_instance" "jenkins_server" {
 
   tags = {
     Name = "Jenkins-Server"
-  }
-}
-
-resource "aws_instance" "app_server" {
-  ami           = "ami-001eed247d2135475"  # Replace with valid AMI ID
-  instance_type = "t3.medium"
-  key_name      = "won_ls_key.pem"  # Replace with your SSH key name
-  vpc_security_group_ids = [aws_security_group.ecs_sg.id]
-  subnet_id = aws_subnet.public_subnet_2.id  # Specify a VPC subnet
-
-  tags = {
-    Name = "App-Server"
   }
 }
