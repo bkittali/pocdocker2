@@ -4,9 +4,11 @@ resource "aws_launch_template" "ecs_launch_template" {
   instance_type = "t3.medium"
   key_name      = "won_ls_key.pem"  # Replace with your SSH key name
 
+
   iam_instance_profile {
-    name = "ecsInstanceRole"
+    name = aws_iam_instance_profile.ecs_instance_profile.name
   }
+
 
   network_interfaces {
     associate_public_ip_address = true
