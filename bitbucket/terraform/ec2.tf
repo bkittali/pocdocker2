@@ -11,10 +11,30 @@ resource "aws_instance" "jenkins_server" {
 user_data = <<-EOF
               #!/bin/bash
               yum update -y
+              yum install -y aws-cli jq
               yum install -y docker git
               systemctl start docker
               systemctl enable docker
 
+              # Retrieve AWS credentials from Secrets Manager
+              CREDENTIALS=$(aws secretsmanager get-secret-value --secret-id jenkins-aws-keys --query SecretString --output text)
+
+              # Parse and set AWS credentials
+              AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .AWS_SECRET_ACCESS_KEY)
+
+              # Create AWS credentials file
+              mkdir -p ~/.aws
+              cat <<EOT > ~/.aws/credentials
+              [default]
+              region = us-east-1
+              aws_access_key_id = $AWS_ACCESS_KEY_ID
+              aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
+              EOT
+              chmod 600 ~/.aws/credentials
+
+              # Verify Secrets Manager Access
+              aws secretsmanager get-secret-value --secret-id jenkins-aws-keys
               # Create SSH directory for Jenkins securely
               mkdir -p /var/jenkins_home/.ssh
               chmod 700 /var/jenkins_home/.ssh
