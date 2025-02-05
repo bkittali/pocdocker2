@@ -57,6 +57,8 @@ user_data = <<-EOF
               # Start SSH Agent and add key (for Jenkins to use GitHub)
               eval "$(ssh-agent -s)"
               ssh-add /var/jenkins_home/.ssh/id_rsa
+             
+              cd /var/jenkins_home/
 
               #Clone github repository
               git clone git@github.com:bkittali/pocdocker2.git
