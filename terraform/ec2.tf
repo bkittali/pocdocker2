@@ -5,15 +5,50 @@ resource "aws_instance" "jenkins_server" {
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
   subnet_id = aws_subnet.public_subnet_1.id  # Explicitly specify a VPC subnet
 
-  user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
               yum update -y
               yum install -y docker git
               systemctl start docker
               systemctl enable docker
-              docker run -d -p 8080:8080 -p 50000:50000 --name jenkins jenkins/jenkins:lts
-              EOF
 
+              # Create Jenkins Home and Seed Job Script Directory
+              mkdir -p /var/jenkins_home/jobs/MyPipelineJob
+              
+              # Copy Jenkinsfile from terraform-provisioned location
+              cat << 'EOT' > /var/jenkins_home/jobs/MyPipelineJob/Jenkinsfile
+              $(cat jenkins/Jenkinsfile)
+              EOT
+
+              # Jenkins Groovy Script to Create a Pipeline Job
+              mkdir -p /var/jenkins_home/init.groovy.d
+              cat << 'EOT' > /var/jenkins_home/init.groovy.d/seedJob.groovy
+              import jenkins.model.*
+              import hudson.model.*
+              import org.jenkinsci.plugins.workflow.job.WorkflowJob
+              import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition
+
+              def jenkins = Jenkins.instance
+              def jobName = "MyPipelineJob"
+
+              if (jenkins.getItem(jobName) == null) {
+                  def job = jenkins.createProject(WorkflowJob, jobName)
+                  def script = new File("/var/jenkins_home/jobs/MyPipelineJob/Jenkinsfile").text
+                  job.setDefinition(new CpsFlowDefinition(script, true))
+                  job.save()
+                  println "Jenkins job 'MyPipelineJob' created successfully!"
+              } else {
+                  println "Jenkins job 'MyPipelineJob' already exists. Skipping creation."
+              }
+              EOT
+
+              # Run Jenkins Container with Preconfigured Jobs
+              docker run -d -p 8080:8080 -p 50000:50000 \
+                --name jenkins \
+                -v /var/jenkins_home:/var/jenkins_home \
+                -v /var/jenkins_home/init.groovy.d:/usr/share/jenkins/ref/init.groovy.d \
+                jenkins/jenkins:lts
+              EOF
   tags = {
     Name = "Jenkins-Server"
   }
