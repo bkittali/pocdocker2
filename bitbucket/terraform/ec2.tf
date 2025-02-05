@@ -12,6 +12,31 @@ user_data = <<-EOF
               systemctl start docker
               systemctl enable docker
 
+              # Create SSH directory for Jenkins securely
+              mkdir -p /var/jenkins_home/.ssh
+              chmod 700 /var/jenkins_home/.ssh
+
+              # Securely Retrieve the SSH Private Key (Method 1: From S3)
+              aws s3 cp s3://won-ls-key/won_ls_key.pem /var/jenkins_home/.ssh/id_rsa
+              
+              # Alternative: Retrieve from AWS Secrets Manager (Method 2)
+              # aws secretsmanager get-secret-value --secret-id won_ls_key --query SecretString --output text > /var/jenkins_home/.ssh/id_rsa
+
+              # Set secure permissions for SSH key
+              chown -R 1000:1000 /var/jenkins_home/.ssh
+              chmod 600 /var/jenkins_home/.ssh/id_rsa
+
+              # Add GitHub to known hosts to avoid prompt during first-time connection
+              ssh-keyscan -t rsa github.com > /var/jenkins_home/.ssh/known_hosts
+              chmod 644 /var/jenkins_home/.ssh/known_hosts
+
+              # Start SSH Agent and add key (for Jenkins to use GitHub)
+              eval "$(ssh-agent -s)"
+              ssh-add /var/jenkins_home/.ssh/id_rsa
+
+              #Clone github repository
+              git clone git@github.com:bkittali/pocdocker2.git
+
               # Create Jenkins Home and Seed Job Script Directory
               mkdir -p /var/jenkins_home/jobs/MyPipelineJob
               mkdir -p /var/jenkins_home/init.groovy.d
@@ -22,7 +47,7 @@ user_data = <<-EOF
 
               # Copy Jenkinsfile from terraform-provisioned location
               cat << 'EOT' > /var/jenkins_home/jobs/MyPipelineJob/Jenkinsfile
-              $(cat jenkins/Jenkinsfile)
+              $(cat "pocdocker/jenkins/Jenkinsfile")
               EOT
 
               # Jenkins Groovy Script to Create a Pipeline Job
