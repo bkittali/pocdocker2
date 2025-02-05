@@ -14,14 +14,18 @@ user_data = <<-EOF
 
               # Create Jenkins Home and Seed Job Script Directory
               mkdir -p /var/jenkins_home/jobs/MyPipelineJob
-              
+              mkdir -p /var/jenkins_home/init.groovy.d
+
+              # Set correct permissions for Jenkins to write inside the container
+              chown -R 1000:1000 /var/jenkins_home
+              chmod -R 775 /var/jenkins_home
+
               # Copy Jenkinsfile from terraform-provisioned location
               cat << 'EOT' > /var/jenkins_home/jobs/MyPipelineJob/Jenkinsfile
               $(cat jenkins/Jenkinsfile)
               EOT
 
               # Jenkins Groovy Script to Create a Pipeline Job
-              mkdir -p /var/jenkins_home/init.groovy.d
               cat << 'EOT' > /var/jenkins_home/init.groovy.d/seedJob.groovy
               import jenkins.model.*
               import hudson.model.*
@@ -42,13 +46,15 @@ user_data = <<-EOF
               }
               EOT
 
-              # Run Jenkins Container with Preconfigured Jobs
+              # Ensure Jenkins container runs as user 1000 to avoid permission issues
               docker run -d -p 8080:8080 -p 50000:50000 \
                 --name jenkins \
+                -u 1000:1000 \
                 -v /var/jenkins_home:/var/jenkins_home \
                 -v /var/jenkins_home/init.groovy.d:/usr/share/jenkins/ref/init.groovy.d \
                 jenkins/jenkins:lts
               EOF
+
   tags = {
     Name = "Jenkins-Server"
   }
