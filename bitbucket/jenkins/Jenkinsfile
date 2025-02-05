@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'git@bitbucket.org:devops.git'
+                git branch: 'main', url: 'git@github.com:bkittali/pocdocker2.git'
             }
         }
         stage('Build and Push Images') {
