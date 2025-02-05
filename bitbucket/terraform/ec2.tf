@@ -1,9 +1,12 @@
 resource "aws_instance" "jenkins_server" {
   ami           = "ami-001eed247d2135475"  # Replace with valid AMI ID
+
   instance_type = "t3.medium"
   key_name      = "won_ls_key"  # Replace with your SSH key name
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
   subnet_id = aws_subnet.public_subnet_1.id  # Explicitly specify a VPC subnet
+  iam_instance_profile = aws_iam_instance_profile.jenkins_instance_profile.name  # Attach IAM Role
+
 
 user_data = <<-EOF
               #!/bin/bash
